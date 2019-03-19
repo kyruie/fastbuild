@@ -179,6 +179,7 @@ private:
     AString             m_CompilerInputFile;
     AString             m_CompilerOutputExtension;
     AString             m_PCHObjectFileName;
+    AString             m_DependencyFileName;
     bool                m_DeoptimizeWritableFiles           = false;
     bool                m_DeoptimizeWritableFilesWithToken  = false;
     bool                m_AllowDistribution                 = true;

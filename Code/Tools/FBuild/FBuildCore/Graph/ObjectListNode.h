@@ -59,7 +59,8 @@ protected:
                                    const AString & preprocessorOptions,
                                    const AString & objectName,
                                    const AString & objectInput,
-                                   const AString & pchObjectName );
+                                   const AString & pchObjectName,
+                                   const AString & dependencyName );
     ObjectNode * GetPrecompiledHeader() const;
 
     // Exposed Properties
@@ -87,12 +88,14 @@ protected:
     AString             m_PCHInputFile;
     AString             m_PCHOutputFile;
     AString             m_PCHOptions;
+    AString             m_DependencyFile;
     AString             m_Preprocessor;
     AString             m_PreprocessorOptions;
     Array< AString >    m_PreBuildDependencyNames;
 
     // Internal State
     bool                m_UsingPrecompiledHeader            = false;
+    bool                m_WriteDependencyFile               = false;
     AString             m_ExtraPDBPath;
     AString             m_ExtraASMPath;
     uint32_t            m_ObjectListInputStartIndex         = 0;

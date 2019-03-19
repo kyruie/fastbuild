@@ -53,6 +53,7 @@ REFLECT_NODE_BEGIN( ObjectNode, Node, MetaNone() )
     REFLECT( m_CompilerInputFile,                   "CompilerInputFile",                MetaFile() )
     REFLECT( m_CompilerOutputExtension,             "CompilerOutputExtension",          MetaOptional() )
     REFLECT( m_PCHObjectFileName,                   "PCHObjectFileName",                MetaOptional() + MetaFile() )
+    REFLECT( m_DependencyFileName,                  "DependencyFileName",               MetaOptional() + MetaFile() )
     REFLECT( m_DeoptimizeWritableFiles,             "DeoptimizeWritableFiles",          MetaOptional() )
     REFLECT( m_DeoptimizeWritableFilesWithToken,    "DeoptimizeWritableFilesWithToken", MetaOptional() )
     REFLECT( m_AllowDistribution,                   "AllowDistribution",                MetaOptional() )
@@ -668,6 +669,7 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
 {
     Timer t;
 
+    bool writeDependency = m_DependencyFileName.IsEmpty() == false;
     {
         CIncludeParser parser;
         bool result = ( output && outputSize ) ? parser.ParseMSCL_Output( output, outputSize )
@@ -684,9 +686,31 @@ bool ObjectNode::ProcessIncludesMSCL( const char * output, uint32_t outputSize )
         // as a determinator, because the file might not include anything)
         m_Includes.Clear();
         parser.SwapIncludes( m_Includes );
+
+        if ( writeDependency )
+        {
+            FileStream fs;
+            if ( fs.Open( m_DependencyFileName.Get(), FileStream::WRITE_ONLY ) )
+            {
+                for ( Array< AString >::ConstIter it = m_Includes.Begin(); it != m_Includes.End(); it++ )
+                {
+                    AString line(*it);
+                    line += '\n';
+                    fs.Write( line.Get(), line.GetLength() );
+                }
+
+                fs.Flush();
+                fs.Close();
+            }
+        }
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+    FLOG_INFO( "Process Includes:\n - File: %s\n", m_Name.Get() );
+    if ( writeDependency )
+    {
+        FLOG_INFO( " - Dependencies: %s\n", m_DependencyFileName.Get() );
+    }
+    FLOG_INFO( " - Time: %u ms\n - Num : %u", uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }
@@ -697,6 +721,7 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
 {
     Timer t;
 
+    bool writeDependency = m_DependencyFileName.IsEmpty() == false;
     {
         const char * output = (char *)job->GetData();
         size_t outputSize = job->GetDataSize();
@@ -738,9 +763,31 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
         // as a determinator, because the file might not include anything)
         m_Includes.Clear();
         parser.SwapIncludes( m_Includes );
+
+        if ( writeDependency )
+        {
+            FileStream fs;
+            if ( fs.Open( m_DependencyFileName.Get(), FileStream::WRITE_ONLY ) )
+            {
+                for ( Array< AString >::ConstIter it = m_Includes.Begin(); it != m_Includes.End(); it++ )
+                {
+                    AString line(*it);
+                    line += '\n';
+                    fs.Write( line.Get(), line.GetLength() );
+                }
+
+                fs.Flush();
+                fs.Close();
+            }
+        }
     }
 
-    FLOG_INFO( "Process Includes:\n - File: %s\n - Time: %u ms\n - Num : %u", m_Name.Get(), uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
+	FLOG_INFO( "Process Includes:\n - File: %s\n", m_Name.Get() );
+    if ( writeDependency )
+    {
+        FLOG_INFO( " - Dependencies: %s\n", m_DependencyFileName.Get() );
+    }
+    FLOG_INFO( " - Time: %u ms\n - Num : %u", uint32_t( t.GetElapsedMS() ), uint32_t( m_Includes.GetSize() ) );
 
     return true;
 }

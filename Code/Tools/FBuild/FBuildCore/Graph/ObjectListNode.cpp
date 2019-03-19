@@ -54,6 +54,8 @@ REFLECT_NODE_BEGIN( ObjectListNode, Node, MetaNone() )
     REFLECT( m_PCHInputFile,                        "PCHInputFile",                     MetaOptional() + MetaFile() )
     REFLECT( m_PCHOutputFile,                       "PCHOutputFile",                    MetaOptional() + MetaFile() )
     REFLECT( m_PCHOptions,                          "PCHOptions",                       MetaOptional() )
+    // Dependency File
+    REFLECT( m_DependencyFile,                      "DependencyFile",                   MetaOptional() + MetaFile() )
     // Preprocessor
     REFLECT( m_Preprocessor,                        "Preprocessor",                     MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT( m_PreprocessorOptions,                 "PreprocessorOptions",              MetaOptional() )
@@ -143,7 +145,7 @@ ObjectListNode::ObjectListNode()
             return false;
         }
 
-        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName );
+        precompiledHeader = CreateObjectNode( nodeGraph, iter, function, pchFlags, 0, m_PCHOptions, AString::GetEmpty(), AString::GetEmpty(), AString::GetEmpty(), m_PCHOutputFile, m_PCHInputFile, pchObjectName, m_DependencyFile );
         if ( precompiledHeader == nullptr )
         {
             return false; // CreateObjectNode will have emitted an error
@@ -634,7 +636,7 @@ bool ObjectListNode::CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inpu
         }
 
         BFFIterator dummyIter;
-        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty() );
+        ObjectNode * objectNode = CreateObjectNode( nodeGraph, dummyIter, nullptr, flags, preprocessorFlags, m_CompilerOptions, m_CompilerOptionsDeoptimized, m_Preprocessor, m_PreprocessorOptions, objFile, inputFile->GetName(), AString::GetEmpty(), m_DependencyFile );
         if ( !objectNode )
         {
             FLOG_ERROR( "Failed to create node '%s'!", objFile.Get() );
@@ -679,7 +681,8 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
                                                const AString & preprocessorOptions,
                                                const AString & objectName,
                                                const AString & objectInput,
-                                               const AString & pchObjectName )
+                                               const AString & pchObjectName,
+                                               const AString & dependencyName )
 {
     ObjectNode * node= nodeGraph.CreateObjectNode( objectName );
     node->m_Compiler = m_Compiler;
@@ -688,6 +691,7 @@ ObjectNode * ObjectListNode::CreateObjectNode( NodeGraph & nodeGraph,
     node->m_CompilerInputFile = objectInput;
     node->m_CompilerOutputExtension = m_CompilerOutputExtension;
     node->m_PCHObjectFileName = pchObjectName;
+    node->m_DependencyFileName = dependencyName;
     if ( flags & ObjectNode::FLAG_CREATING_PCH )
     {
         // Precompiled headers are never de-optimized
