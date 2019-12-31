@@ -840,10 +840,28 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
             FileStream fs;
             if ( fs.Open( m_DependencyFileName.Get(), FileStream::WRITE_ONLY ) )
             {
+                if (GetFlag( FLAG_CLANG ))
+                {
+                    AString line(m_Name);
+                    line += ": \\\n";
+                    fs.Write( line.Get(), line.GetLength() );
+                }
+            	
                 for ( Array< AString >::ConstIter it = m_Includes.Begin(); it != m_Includes.End(); it++ )
                 {
-                    AString line(*it);
-                    line += '\n';
+                    AString line;
+                    if (GetFlag( FLAG_CLANG ))
+                    {
+                        line += "  ";
+                        line += *it;
+                        line += " \\\n";
+                    }
+                    else
+                    {
+                        line += *it;
+                        line += '\n';
+                    }
+                	
                     fs.Write( line.Get(), line.GetLength() );
                 }
 
