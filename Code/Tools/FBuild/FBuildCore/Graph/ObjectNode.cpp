@@ -853,7 +853,9 @@ bool ObjectNode::ProcessIncludesWithPreProcessor( Job * job )
                     if (GetFlag( FLAG_CLANG ))
                     {
                         line += "  ";
-                        line += *it;
+                    	AString copy(*it);
+                    	copy.Replace(" ", "\\ ");
+                        line += copy;
                         line += " \\\n";
                     }
                     else
